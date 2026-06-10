@@ -554,19 +554,17 @@
             const overlay = document.getElementById('loading-overlay');
             const percentText = document.getElementById('loading-percentage');
 
-            // --- INSTRUCTIONS FOR USER ---
-            // Replace 'model.glb' with the relative or absolute path of your exported baked GLB room model.
-            // For testing out-of-the-box, we use a beautifully lighting-baked showroom chair model from public Three.js assets.
-            const modelURL = 'https://threejs.org/examples/models/gltf/SheenChair.glb';
+            // Load the newly exported baked room model
+            const modelURL = 'NC_final.glb';
 
             loader.load(
                 modelURL,
                 (gltf) => {
                     roomModel = gltf.scene;
                     
-                    // Center the model in the viewer and raise it slightly off the ground plane
+                    // Center the model in the viewer
                     roomModel.position.set(0, 0, 0);
-                    roomModel.scale.set(1.8, 1.8, 1.8); // Adjust scale as needed
+                    roomModel.scale.set(1.0, 1.0, 1.0); // Adjust scale as needed
                     
                     roomModel.traverse((node) => {
                         if (node.isMesh) {
