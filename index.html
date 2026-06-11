@@ -652,6 +652,27 @@
 
             <div class="divider"></div>
 
+            <!-- Decoration -->
+            <div class="section-title">Decoration</div>
+
+            <div class="toggle-container" id="toggle-ledstrip">
+                <span class="toggle-label"><span class="toggle-icon">💡</span> LED Strip Wall</span>
+                <label class="switch">
+                    <input type="checkbox" id="ledstrip-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-container" id="toggle-cladding">
+                <span class="toggle-label"><span class="toggle-icon">🧱</span> Cladding Wall</span>
+                <label class="switch">
+                    <input type="checkbox" id="cladding-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="divider"></div>
+
             <!-- Camera -->
             <div class="section-title">Camera</div>
             <button class="btn" id="reset-camera-btn">⟳ Reset Camera</button>
@@ -691,6 +712,14 @@
                 <span class="nav-icon">🏗️</span>
                 MODEL
             </button>
+            <button class="mobile-nav-btn active" data-target="ledstrip" id="mob-led">
+                <span class="nav-icon">💡</span>
+                LED
+            </button>
+            <button class="mobile-nav-btn active" data-target="cladding" id="mob-clad">
+                <span class="nav-icon">🧱</span>
+                CLAD
+            </button>
             <button class="mobile-nav-btn" data-action="reset" id="mob-reset">
                 <span class="nav-icon">🎯</span>
                 RESET
@@ -723,7 +752,9 @@
             desk: [],
             tv: [],
             ac: [],
-            minimodel: []
+            minimodel: [],
+            ledstrip: [],
+            cladding: []
         };
 
         // Track visibility state
@@ -731,7 +762,9 @@
             desk: true,
             tv: true,
             ac: true,
-            minimodel: true
+            minimodel: true,
+            ledstrip: true,
+            cladding: true
         };
 
         // Initial camera
@@ -874,6 +907,14 @@
             if (name.includes('Office_Table')) {
                 return 'desk';
             }
+            // LED Strip Wall
+            if (name.includes('LED_Strip_Wall') || name.includes('LED_Strip')) {
+                return 'ledstrip';
+            }
+            // Cladding Wall
+            if (name.includes('Cladding_Wall') || name.includes('Cladding')) {
+                return 'cladding';
+            }
 
             return null;
         }
@@ -919,6 +960,8 @@
                     console.log('  TV:', objectGroups.tv.length);
                     console.log('  AC:', objectGroups.ac.length);
                     console.log('  MiniModel:', objectGroups.minimodel.length);
+                    console.log('  LED Strip:', objectGroups.ledstrip.length);
+                    console.log('  Cladding:', objectGroups.cladding.length);
 
                     // Hide Loader
                     overlay.style.opacity = 0;
@@ -1014,7 +1057,9 @@
                 'desk-toggle': 'desk',
                 'tv-toggle': 'tv',
                 'ac-toggle': 'ac',
-                'minimodel-toggle': 'minimodel'
+                'minimodel-toggle': 'minimodel',
+                'ledstrip-toggle': 'ledstrip',
+                'cladding-toggle': 'cladding'
             };
 
             Object.entries(toggleMap).forEach(([id, category]) => {
@@ -1033,7 +1078,9 @@
                 'mob-desk': 'desk',
                 'mob-tv': 'tv',
                 'mob-ac': 'ac',
-                'mob-mini': 'minimodel'
+                'mob-mini': 'minimodel',
+                'mob-led': 'ledstrip',
+                'mob-clad': 'cladding'
             };
 
             Object.entries(mobileBtnMap).forEach(([btnId, category]) => {
@@ -1081,7 +1128,9 @@
                 'desk': 'mob-desk',
                 'tv': 'mob-tv',
                 'ac': 'mob-ac',
-                'minimodel': 'mob-mini'
+                'minimodel': 'mob-mini',
+                'ledstrip': 'mob-led',
+                'cladding': 'mob-clad'
             };
             const btn = document.getElementById(btnMap[category]);
             if (btn) {
