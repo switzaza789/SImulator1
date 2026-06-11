@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><title>GLB Scanner</title></head>
+<body>
+<pre id="output">Loading...</pre>
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+}
+</script>
+<script type="module">
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const loader = new GLTFLoader();
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+loader.setDRACOLoader(dracoLoader);
+
+loader.load('NC_final.glb', (gltf) => {
+    let output = 'GLB Object Tree:\n\n';
+    function traverse(node, depth = 0) {
+        const indent = '  '.repeat(depth);
+        const type = node.isMesh ? '[MESH]' : node.isLight ? '[LIGHT]' : '[GROUP/OBJECT]';
+        output += `${indent}${type} "${node.name}" (children: ${node.children.length})\n`;
+        node.children.forEach(child => traverse(child, depth + 1));
+    }
+    traverse(gltf.scene);
+    document.getElementById('output').textContent = output;
+}, null, (err) => {
+    document.getElementById('output').textContent = 'Error: ' + err;
+});
+</script>
+</body>
+</html>

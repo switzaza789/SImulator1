@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photorealistic 3D Room Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Interactive 3D Room Viewer with photorealistic baked textures">
+    <title>LuxeSpace 3D — Interactive Room Viewer</title>
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,13 +20,16 @@
             --text-secondary: #9ca3af;
             --accent: #a855f7;
             --accent-hover: #c084fc;
+            --accent-dim: rgba(168, 85, 247, 0.2);
+            --danger: #ef4444;
+            --success: #22c55e;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body, html {
@@ -35,6 +39,7 @@
             background: var(--bg-gradient);
             font-family: 'Inter', sans-serif;
             color: var(--text-primary);
+            touch-action: none;
         }
 
         #canvas-container {
@@ -58,73 +63,139 @@
             pointer-events: none;
         }
 
-        /* Premium Glassmorphic UI Panel */
+        /* ====== CONTROL PANEL ====== */
         .control-panel {
             position: absolute;
-            top: 30px;
-            left: 30px;
+            top: 20px;
+            left: 20px;
             z-index: 10;
-            width: 380px;
+            width: 340px;
+            max-height: calc(100vh - 40px);
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 30px;
+            border-radius: 20px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 
                         inset 0 1px 0 rgba(255, 255, 255, 0.1),
                         0 0 40px var(--glass-glow);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            transform: translateY(0);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        .control-panel:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 
-                        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                        0 0 50px rgba(147, 51, 234, 0.25);
+        .panel-header {
+            padding: 24px 24px 0 24px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .panel-toggle-icon {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .panel-toggle-icon:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .panel-toggle-icon svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.3s;
+        }
+
+        .control-panel.collapsed .panel-toggle-icon svg {
+            transform: rotate(180deg);
+        }
+
+        .panel-body {
+            padding: 0 24px 24px 24px;
+            overflow-y: auto;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+                        opacity 0.3s, padding 0.3s;
+            max-height: 600px;
+            opacity: 1;
+        }
+
+        .panel-body::-webkit-scrollbar {
+            width: 4px;
+        }
+        .panel-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .panel-body::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+
+        .control-panel.collapsed .panel-body {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            overflow: hidden;
         }
 
         h1 {
             font-family: 'Outfit', sans-serif;
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 800;
             background: linear-gradient(to right, #ffffff, #d8b4fe);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             letter-spacing: -0.5px;
         }
 
         .subtitle {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-secondary);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             line-height: 1.5;
+            padding-right: 36px;
         }
 
         .section-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 14px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             color: var(--accent);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
+            margin-top: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding-bottom: 8px;
         }
 
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
         .control-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .control-label {
             display: flex;
             justify-content: space-between;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #e5e7eb;
         }
 
@@ -137,7 +208,7 @@
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
-            height: 6px;
+            height: 5px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
             outline: none;
@@ -165,14 +236,29 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 15px;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .toggle-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-icon {
+            font-size: 16px;
         }
 
         .switch {
             position: relative;
             display: inline-block;
-            width: 44px;
-            height: 24px;
+            width: 40px;
+            height: 22px;
+            flex-shrink: 0;
         }
 
         .switch input {
@@ -184,20 +270,17 @@
         .slider {
             position: absolute;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(255, 255, 255, 0.1);
-            transition: .4s;
-            border-radius: 24px;
+            transition: .3s;
+            border-radius: 22px;
         }
 
         .slider:before {
             position: absolute;
             content: "";
-            height: 18px;
-            width: 18px;
+            height: 16px;
+            width: 16px;
             left: 3px;
             bottom: 3px;
             background-color: white;
@@ -210,7 +293,7 @@
         }
 
         input:checked + .slider:before {
-            transform: translateX(20px);
+            transform: translateX(18px);
         }
 
         .btn {
@@ -218,18 +301,18 @@
             justify-content: center;
             align-items: center;
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
             font-family: 'Outfit', sans-serif;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
             transition: all 0.3s;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .btn:hover {
@@ -238,27 +321,23 @@
             background: linear-gradient(135deg, #c084fc 0%, #8b5cf6 100%);
         }
 
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--glass-border);
-            color: var(--text-primary);
-            box-shadow: none;
+        .btn:active {
+            transform: translateY(0);
         }
 
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: none;
-            box-shadow: none;
+        /* Divider */
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: rgba(255,255,255,0.05);
+            margin: 4px 0;
         }
 
-        /* Model Loading Overlay */
+        /* ====== LOADING OVERLAY ====== */
         #loading-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: #05020a;
             z-index: 100;
             display: flex;
@@ -268,9 +347,9 @@
             transition: opacity 0.8s ease-in-out;
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
+        .spinner-ring {
+            width: 56px;
+            height: 56px;
             border: 3px solid rgba(168, 85, 247, 0.1);
             border-radius: 50%;
             border-top-color: var(--accent);
@@ -284,30 +363,89 @@
 
         .loading-text {
             font-family: 'Outfit', sans-serif;
-            font-size: 16px;
+            font-size: 14px;
             color: var(--text-primary);
-            letter-spacing: 1px;
+            letter-spacing: 2px;
         }
 
-        /* Helper instructions card */
+        .loading-subtext {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* ====== MOBILE BOTTOM NAV ====== */
+        .mobile-nav {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 10;
+            background: rgba(5, 2, 10, 0.85);
+            border-top: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+        }
+
+        .mobile-nav-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .mobile-nav-btn {
+            flex: 1;
+            min-width: 60px;
+            max-width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 8px 4px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 9px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .mobile-nav-btn.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent-hover);
+        }
+
+        .mobile-nav-btn .nav-icon {
+            font-size: 20px;
+        }
+
+        /* ====== INSTRUCTIONS CARD ====== */
         .instructions-card {
             position: absolute;
-            bottom: 30px;
-            right: 30px;
+            bottom: 20px;
+            right: 20px;
             z-index: 10;
             background: rgba(5, 2, 10, 0.6);
             border: 1px solid var(--glass-border);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 15px 20px;
-            max-width: 300px;
+            border-radius: 14px;
+            padding: 12px 16px;
+            max-width: 260px;
             pointer-events: none;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         .instructions-card p {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
             line-height: 1.6;
         }
@@ -316,18 +454,120 @@
             color: var(--text-primary);
         }
 
-        /* Adaptive Responsive Layout */
+        /* ====== TOUCH HINT TOAST ====== */
+        .touch-hint {
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 20;
+            background: rgba(10, 6, 20, 0.85);
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 50px;
+            padding: 10px 20px 10px 14px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(168,85,247,0.1);
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .touch-hint.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .touch-hint-icon {
+            font-size: 22px;
+            animation: pulseIcon 1.8s ease-in-out infinite;
+        }
+
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .touch-hint-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: #f3f4f6;
+            margin-bottom: 2px;
+        }
+
+        .touch-hint-desc {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        /* ====== RESPONSIVE ====== */
         @media (max-width: 768px) {
             .control-panel {
-                width: calc(100% - 40px);
-                top: 20px;
-                left: 20px;
-                padding: 20px;
+                width: calc(100% - 24px);
+                top: 12px;
+                left: 12px;
+                border-radius: 16px;
+                max-height: calc(100vh - 100px);
             }
-            .instructions-card {
-                display: none;
+
+            .panel-header {
+                padding: 16px 16px 0 16px;
+            }
+
+            .panel-body {
+                padding: 0 16px 16px 16px;
+                max-height: 400px;
+            }
+
+            .panel-toggle-icon {
+                top: 16px;
+                right: 16px;
+            }
+
+            h1 { font-size: 18px; }
+            .subtitle { font-size: 11px; margin-bottom: 12px; }
+
+            .instructions-card { display: none; }
+
+            .mobile-nav { display: block; }
+
+            .touch-hint { display: flex; }
+        }
+
+        @media (max-width: 380px) {
+            .control-panel {
+                width: calc(100% - 16px);
+                left: 8px;
+                top: 8px;
+            }
+
+            .mobile-nav-btn {
+                min-width: 50px;
+                font-size: 8px;
+                padding: 6px 2px;
+            }
+
+            .mobile-nav-btn .nav-icon {
+                font-size: 18px;
             }
         }
+
+        /* Status indicator dot */
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .status-dot.on { background: var(--success); box-shadow: 0 0 6px var(--success); }
+        .status-dot.off { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
     </style>
 </head>
 <body>
@@ -336,43 +576,126 @@
 
     <!-- Loading Screen -->
     <div id="loading-overlay">
-        <div class="spinner"></div>
+        <div class="spinner-ring"></div>
         <div class="loading-text" id="loading-percentage">LOADING 3D WORLD...</div>
+        <div class="loading-subtext">Preparing photorealistic environment</div>
     </div>
 
     <!-- Control Panel GUI -->
-    <div class="control-panel">
-        <h1>LuxeSpace 3D</h1>
-        <div class="subtitle">Interactive WebGL viewer featuring photorealistic baked textures and custom Over-the-Shoulder camera perspective.</div>
-
-        <div class="section-title">Environment Controls</div>
-
-        <div class="control-group">
-            <div class="control-label">
-                <span>Exposure (Brightness)</span>
-                <span class="control-value" id="exposure-val">1.0</span>
+    <div class="control-panel" id="control-panel">
+        <div class="panel-header" id="panel-header">
+            <h1>LuxeSpace 3D</h1>
+            <div class="subtitle">Interactive room viewer with real-time object controls.</div>
+            <div class="panel-toggle-icon" id="panel-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
             </div>
-            <input type="range" id="exposure-slider" min="0.2" max="2.0" step="0.05" value="1.0">
         </div>
 
-        <div class="control-group toggle-container">
-            <div class="control-label" style="margin-bottom: 0;">
-                <span style="font-weight: 500;">Auto Orbit Rotation</span>
+        <div class="panel-body" id="panel-body">
+            <!-- Environment Controls -->
+            <div class="section-title">Environment</div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Exposure</span>
+                    <span class="control-value" id="exposure-val">1.0</span>
+                </div>
+                <input type="range" id="exposure-slider" min="0.2" max="2.5" step="0.05" value="1.0">
             </div>
-            <label class="switch">
-                <input type="checkbox" id="auto-rotate-toggle" checked>
-                <span class="slider"></span>
-            </label>
+
+            <div class="toggle-container">
+                <span class="toggle-label"><span class="toggle-icon">🔄</span> Auto Rotate</span>
+                <label class="switch">
+                    <input type="checkbox" id="auto-rotate-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Object Visibility -->
+            <div class="section-title">Object Visibility</div>
+
+            <div class="toggle-container" id="toggle-desk">
+                <span class="toggle-label"><span class="toggle-icon">🪑</span> Desks</span>
+                <label class="switch">
+                    <input type="checkbox" id="desk-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-container" id="toggle-tv">
+                <span class="toggle-label"><span class="toggle-icon">📺</span> TV</span>
+                <label class="switch">
+                    <input type="checkbox" id="tv-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-container" id="toggle-ac">
+                <span class="toggle-label"><span class="toggle-icon">❄️</span> Air Conditioner</span>
+                <label class="switch">
+                    <input type="checkbox" id="ac-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-container" id="toggle-minimodel">
+                <span class="toggle-label"><span class="toggle-icon">🏗️</span> Mini Model</span>
+                <label class="switch">
+                    <input type="checkbox" id="minimodel-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Camera -->
+            <div class="section-title">Camera</div>
+            <button class="btn" id="reset-camera-btn">⟳ Reset Camera</button>
         </div>
-
-        <div class="section-title" style="margin-top: 25px;">Camera Presets</div>
-
-        <button class="btn" id="reset-camera-btn">Reset to OTS Perspective</button>
     </div>
 
-    <!-- Right Bottom Instructions -->
-    <div class="instructions-card">
+    <!-- Right Bottom Instructions (Desktop only) -->
+    <div class="instructions-card" id="instructions-card">
         <p><strong>Controls:</strong> Left click + drag to <strong>Rotate</strong>. Right click + drag to <strong>Pan</strong>. Scroll to <strong>Zoom</strong>.</p>
+    </div>
+
+    <!-- Mobile Touch Hint Toast -->
+    <div class="touch-hint" id="touch-hint">
+        <span class="touch-hint-icon">👆</span>
+        <div>
+            <div class="touch-hint-title">Touch Controls</div>
+            <div class="touch-hint-desc">1 นิ้ว: หมุนมุมมอง &nbsp;·&nbsp; 2 นิ้ว: ซูมเข้า/ออก</div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="mobile-nav" id="mobile-nav">
+        <div class="mobile-nav-row">
+            <button class="mobile-nav-btn active" data-target="desk" id="mob-desk">
+                <span class="nav-icon">🪑</span>
+                DESK
+            </button>
+            <button class="mobile-nav-btn active" data-target="tv" id="mob-tv">
+                <span class="nav-icon">📺</span>
+                TV
+            </button>
+            <button class="mobile-nav-btn active" data-target="ac" id="mob-ac">
+                <span class="nav-icon">❄️</span>
+                AC
+            </button>
+            <button class="mobile-nav-btn active" data-target="minimodel" id="mob-mini">
+                <span class="nav-icon">🏗️</span>
+                MODEL
+            </button>
+            <button class="mobile-nav-btn" data-action="reset" id="mob-reset">
+                <span class="nav-icon">🎯</span>
+                RESET
+            </button>
+        </div>
     </div>
 
     <!-- Three.js Library and GLTFLoader/OrbitControls via CDN -->
@@ -391,30 +714,51 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-        // Variables
-        let scene, camera, renderer, controls, roomModel, shoulderSilhouette;
+        // ====== VARIABLES ======
+        let scene, camera, renderer, controls, roomModel;
         const container = document.getElementById('canvas-container');
 
-        // Initial camera Over-the-shoulder (OTS) setup values
-        // Placed elevated, offset to the rear of the viewing focus, and looking down
+        // Object groups for toggle
+        const objectGroups = {
+            desk: [],
+            tv: [],
+            ac: [],
+            minimodel: []
+        };
+
+        // Track visibility state
+        const visibility = {
+            desk: true,
+            tv: true,
+            ac: true,
+            minimodel: true
+        };
+
+        // Initial camera
         const initialCameraPos = { x: 3.5, y: 2.5, z: 4.8 };
         const cameraTarget = { x: 0, y: 0.8, z: 0 };
 
-        // Initialize Scene
+        // ====== INIT ======
         function init() {
-            // Create Scene
             scene = new THREE.Scene();
 
-            // Create Camera
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
             camera.position.set(initialCameraPos.x, initialCameraPos.y, initialCameraPos.z);
 
-            // Create Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+            // Detect mobile for performance tuning
+            const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: !isMobile, 
+                alpha: true, 
+                powerPreference: isMobile ? "default" : "high-performance" 
+            });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+            renderer.shadowMap.enabled = !isMobile;
+            if (!isMobile) {
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            }
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.0;
             container.appendChild(renderer.domElement);
@@ -422,61 +766,70 @@
             // Orbit Controls
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.maxPolarAngle = Math.PI / 2 - 0.05; // Prevent camera going below floor
-            controls.minDistance = 2;
+            controls.dampingFactor = 0.06;
+            controls.maxPolarAngle = Math.PI / 2 - 0.05;
+            controls.minDistance = 1.5;
             controls.maxDistance = 15;
             controls.target.set(cameraTarget.x, cameraTarget.y, cameraTarget.z);
             controls.autoRotate = true;
             controls.autoRotateSpeed = 0.5;
 
-            // Setup Studio Lighting (in addition to baked textures for real-time shine/highlights)
-            setupLighting();
+            // Touch gesture config for mobile
+            if (isMobile) {
+                controls.rotateSpeed = 0.6;
+                controls.zoomSpeed = 1.2;
+                controls.panSpeed = 0.4;
+                controls.enablePan = false;          // disable pan so 2-finger = zoom only
+                // Map touch gestures: ONE_FINGER = rotate, TWO_FINGER = dolly (zoom)
+                controls.touches = {
+                    ONE: THREE.TOUCH.ROTATE,
+                    TWO: THREE.TOUCH.DOLLY_ROTATE
+                };
+            } else {
+                controls.enablePan = true;
+            }
 
-            // Setup Procedural Environment Map (For photorealistic reflection highlights)
+            setupLighting(isMobile);
             setupEnvironmentMap();
-
-            // Load 3D Model
             loadModel();
 
-            // Handle Resize
             window.addEventListener('resize', onWindowResize);
+            // Also handle orientation change for mobile
+            window.addEventListener('orientationchange', () => {
+                setTimeout(onWindowResize, 200);
+            });
 
-            // Setup Event Listeners for UI controls
             setupUIListeners();
-
-            // Start Animation Loop
             animate();
         }
 
-        // Setup Realistic Real-time Lights
-        function setupLighting() {
-            // Ambient light for general soft shadow fill
-            const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+        // ====== LIGHTING ======
+        function setupLighting(isMobile) {
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambient);
 
-            // Soft Directional Light for casting gentle real-time shadows
             const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2);
             sunLight.position.set(5, 8, 3);
-            sunLight.castShadow = true;
-            sunLight.shadow.mapSize.width = 2048;
-            sunLight.shadow.mapSize.height = 2048;
-            sunLight.shadow.camera.near = 0.5;
-            sunLight.shadow.camera.far = 20;
-            sunLight.shadow.camera.left = -4;
-            sunLight.shadow.camera.right = 4;
-            sunLight.shadow.camera.top = 4;
-            sunLight.shadow.camera.bottom = -4;
-            sunLight.shadow.bias = -0.0005;
+            if (!isMobile) {
+                sunLight.castShadow = true;
+                sunLight.shadow.mapSize.width = 2048;
+                sunLight.shadow.mapSize.height = 2048;
+                sunLight.shadow.camera.near = 0.5;
+                sunLight.shadow.camera.far = 20;
+                sunLight.shadow.camera.left = -4;
+                sunLight.shadow.camera.right = 4;
+                sunLight.shadow.camera.top = 4;
+                sunLight.shadow.camera.bottom = -4;
+                sunLight.shadow.bias = -0.0005;
+            }
             scene.add(sunLight);
 
-            // Subtle colored fill light for realistic bounce light impression
-            const bounceLight = new THREE.DirectionalLight(0x8b5cf6, 0.4);
+            const bounceLight = new THREE.DirectionalLight(0x8b5cf6, 0.3);
             bounceLight.position.set(-5, 3, -5);
             scene.add(bounceLight);
         }
 
-        // Procedural Studio Soft Environment Map using Canvas
+        // ====== ENVIRONMENT MAP ======
         function setupEnvironmentMap() {
             const size = 512;
             const canvas = document.createElement('canvas');
@@ -484,7 +837,6 @@
             canvas.height = size;
             const ctx = canvas.getContext('2d');
 
-            // Draw soft highlights and background gradient
             const grad = ctx.createRadialGradient(size/2, size/2, 10, size/2, size/2, size/2);
             grad.addColorStop(0, '#1c1917');
             grad.addColorStop(0.5, '#0c0a09');
@@ -492,7 +844,6 @@
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, size, size);
 
-            // Draw a few virtual studio lights
             ctx.fillStyle = 'rgba(255, 250, 240, 0.8)';
             ctx.beginPath(); ctx.arc(100, 100, 80, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
@@ -503,49 +854,73 @@
             scene.environment = texture;
         }
 
-        // Load glTF / glb Model
+        // ====== CLASSIFY NODE ======
+        function classifyNode(node) {
+            const name = node.name || '';
+
+            // MiniModel objects (on desk)
+            if (name.startsWith('MiniModel_')) {
+                return 'minimodel';
+            }
+            // TV
+            if (name.includes('Wall_TV') || name === 'Wall_TV_Frame' || name === 'Wall_TV_Screen') {
+                return 'tv';
+            }
+            // Air Conditioner
+            if (name.includes('Wall_AC') || name.includes('AC_Body') || name.includes('AC_Side')) {
+                return 'ac';
+            }
+            // Desk / Tables (including Office_Table patterns)
+            if (name.includes('Office_Table')) {
+                return 'desk';
+            }
+
+            return null;
+        }
+
+        // ====== LOAD MODEL ======
         function loadModel() {
             const loader = new GLTFLoader();
             const dracoLoader = new DRACOLoader();
-            
-            // Setup Draco Decoder in case user exports with Draco Compression enabled
             dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
             loader.setDRACOLoader(dracoLoader);
 
             const overlay = document.getElementById('loading-overlay');
             const percentText = document.getElementById('loading-percentage');
 
-            // Load the newly exported baked room model
             const modelURL = 'NC_final.glb';
 
             loader.load(
                 modelURL,
                 (gltf) => {
                     roomModel = gltf.scene;
-                    
-                    // Center the model in the viewer
+
                     roomModel.position.set(0, 0, 0);
-                    roomModel.scale.set(1.0, 1.0, 1.0); // Adjust scale as needed
-                    
+                    roomModel.scale.set(1.0, 1.0, 1.0);
+
+                    // Traverse and classify every node
                     roomModel.traverse((node) => {
                         if (node.isMesh) {
                             node.castShadow = true;
                             node.receiveShadow = true;
-                            
-                            // Adjust material settings to maximize baked look
-                            if (node.material) {
-                                // If using fully baked textures, set roughness to 1 and metalness to 0
-                                // to prevent web lights from washing out your beautiful Blender Cycles bake.
-                                // Uncomment below if you want pure baked materials:
-                                // node.material.roughness = 1.0;
-                                // node.material.metalness = 0.0;
-                            }
+                        }
+
+                        const category = classifyNode(node);
+                        if (category) {
+                            objectGroups[category].push(node);
                         }
                     });
 
                     scene.add(roomModel);
 
-                    // Hide Loader with animation
+                    // Log for debugging
+                    console.log('Object groups loaded:');
+                    console.log('  Desks:', objectGroups.desk.length);
+                    console.log('  TV:', objectGroups.tv.length);
+                    console.log('  AC:', objectGroups.ac.length);
+                    console.log('  MiniModel:', objectGroups.minimodel.length);
+
+                    // Hide Loader
                     overlay.style.opacity = 0;
                     setTimeout(() => {
                         overlay.style.display = 'none';
@@ -554,88 +929,174 @@
                 (xhr) => {
                     if (xhr.lengthComputable) {
                         const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                        percentText.textContent = `LOADING WORLD: ${percent}%`;
+                        percentText.textContent = `LOADING: ${percent}%`;
                     }
                 },
                 (error) => {
                     console.error('Error loading GLB:', error);
-                    percentText.textContent = 'ERROR LOADING MODEL (Check path)';
+                    percentText.textContent = 'ERROR — CHECK CONSOLE';
                 }
             );
         }
 
-        // Window resize handler
+        // ====== TOGGLE VISIBILITY ======
+        function setGroupVisibility(category, visible) {
+            visibility[category] = visible;
+            objectGroups[category].forEach(node => {
+                node.visible = visible;
+            });
+        }
+
+        // ====== CAMERA RESET ======
+        function resetCamera() {
+            const duration = 1000;
+            const startPos = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+            const startTarget = { x: controls.target.x, y: controls.target.y, z: controls.target.z };
+            const startTime = performance.now();
+
+            function transition(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const ease = progress < 0.5
+                    ? 4 * progress * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+                camera.position.x = startPos.x + (initialCameraPos.x - startPos.x) * ease;
+                camera.position.y = startPos.y + (initialCameraPos.y - startPos.y) * ease;
+                camera.position.z = startPos.z + (initialCameraPos.z - startPos.z) * ease;
+
+                controls.target.x = startTarget.x + (cameraTarget.x - startTarget.x) * ease;
+                controls.target.y = startTarget.y + (cameraTarget.y - startTarget.y) * ease;
+                controls.target.z = startTarget.z + (cameraTarget.z - startTarget.z) * ease;
+
+                if (progress < 1) {
+                    requestAnimationFrame(transition);
+                }
+            }
+            requestAnimationFrame(transition);
+        }
+
+        // ====== RESIZE ======
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // UI Event Listeners
+        // ====== UI LISTENERS ======
         function setupUIListeners() {
+            // --- Panel collapse ---
+            const panel = document.getElementById('control-panel');
+            const panelHeader = document.getElementById('panel-header');
+            const panelToggle = document.getElementById('panel-toggle');
+
+            panelToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                panel.classList.toggle('collapsed');
+            });
+
+            // --- Exposure ---
             const exposureSlider = document.getElementById('exposure-slider');
             const exposureVal = document.getElementById('exposure-val');
-            const autoRotateToggle = document.getElementById('auto-rotate-toggle');
-            const resetBtn = document.getElementById('reset-camera-btn');
-
-            // Exposure adjustment
             exposureSlider.addEventListener('input', (e) => {
                 const val = parseFloat(e.target.value);
                 renderer.toneMappingExposure = val;
                 exposureVal.textContent = val.toFixed(1);
             });
 
-            // Auto Rotation toggle
-            autoRotateToggle.addEventListener('change', (e) => {
+            // --- Auto Rotate ---
+            document.getElementById('auto-rotate-toggle').addEventListener('change', (e) => {
                 controls.autoRotate = e.target.checked;
             });
 
-            // Camera reset to cinematic Over-the-shoulder (OTS) view
-            resetBtn.addEventListener('click', () => {
-                // Smooth transition
-                const duration = 1200; // ms
-                const startPos = { ...camera.position };
-                const startTime = performance.now();
+            // --- Object toggles (desktop panel) ---
+            const toggleMap = {
+                'desk-toggle': 'desk',
+                'tv-toggle': 'tv',
+                'ac-toggle': 'ac',
+                'minimodel-toggle': 'minimodel'
+            };
 
-                function transition(now) {
-                    const elapsed = now - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    
-                    // Ease function (easeInOutCubic)
-                    const ease = progress < 0.5 
-                        ? 4 * progress * progress * progress 
-                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-
-                    camera.position.x = startPos.x + (initialCameraPos.x - startPos.x) * ease;
-                    camera.position.y = startPos.y + (initialCameraPos.y - startPos.y) * ease;
-                    camera.position.z = startPos.z + (initialCameraPos.z - startPos.z) * ease;
-
-                    controls.target.set(
-                        cameraTarget.x * ease, 
-                        cameraTarget.y * ease, 
-                        cameraTarget.z * ease
-                    );
-
-                    if (progress < 1) {
-                        requestAnimationFrame(transition);
-                    }
-                }
-                requestAnimationFrame(transition);
+            Object.entries(toggleMap).forEach(([id, category]) => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    setGroupVisibility(category, e.target.checked);
+                    // Sync mobile nav button
+                    syncMobileBtn(category, e.target.checked);
+                });
             });
+
+            // --- Camera reset ---
+            document.getElementById('reset-camera-btn').addEventListener('click', resetCamera);
+
+            // --- Mobile nav buttons ---
+            const mobileBtnMap = {
+                'mob-desk': 'desk',
+                'mob-tv': 'tv',
+                'mob-ac': 'ac',
+                'mob-mini': 'minimodel'
+            };
+
+            Object.entries(mobileBtnMap).forEach(([btnId, category]) => {
+                document.getElementById(btnId).addEventListener('click', () => {
+                    const newState = !visibility[category];
+                    setGroupVisibility(category, newState);
+
+                    // Sync toggle in panel
+                    const toggleId = Object.entries(toggleMap).find(([, cat]) => cat === category)?.[0];
+                    if (toggleId) {
+                        document.getElementById(toggleId).checked = newState;
+                    }
+
+                    // Update mobile button state
+                    const btn = document.getElementById(btnId);
+                    btn.classList.toggle('active', newState);
+                });
+            });
+
+            // Mobile reset button
+            document.getElementById('mob-reset').addEventListener('click', resetCamera);
+
+            // ---- Touch Hint Toast (mobile) ----
+            showTouchHint();
         }
 
-        // Frame rendering loops
+        function showTouchHint() {
+            const hint = document.getElementById('touch-hint');
+            if (!hint) return;
+            // Only show on touch-capable devices
+            if (!('ontouchstart' in window) && navigator.maxTouchPoints < 1) return;
+
+            // Delay slightly so the scene loads first
+            setTimeout(() => {
+                hint.classList.add('visible');
+                // Auto-hide after 4 seconds
+                setTimeout(() => {
+                    hint.classList.remove('visible');
+                }, 4000);
+            }, 1200);
+        }
+
+        function syncMobileBtn(category, isActive) {
+            const btnMap = {
+                'desk': 'mob-desk',
+                'tv': 'mob-tv',
+                'ac': 'mob-ac',
+                'minimodel': 'mob-mini'
+            };
+            const btn = document.getElementById(btnMap[category]);
+            if (btn) {
+                btn.classList.toggle('active', isActive);
+            }
+        }
+
+        // ====== ANIMATE ======
         function animate() {
             requestAnimationFrame(animate);
-
-            // Update Orbit Controls
             controls.update();
-
-            // Render Frame
             renderer.render(scene, camera);
         }
 
-        // Start everything
+        // ====== START ======
         init();
     </script>
 </body>
